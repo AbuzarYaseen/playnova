@@ -17,12 +17,12 @@ import Autoplay from "embla-carousel-autoplay";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
 
 export const Hero = () => {
-  const { data, isLoading } = useTrendingMovies();
+  const { data, loading } = useTrendingMovies();
   const plugin = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true }),
   );
 
-  if (isLoading || !data?.results) {
+  if (loading || !data?.results) {
     return <div className="h-[80vh] w-full bg-secondary animate-pulse" />;
   }
 

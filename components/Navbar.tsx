@@ -64,16 +64,16 @@ export const Navbar = () => {
             TV Shows
           </Link>
           <Link
+            href="/seasons"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Seasons
+          </Link>
+          <Link
             href="/movies"
             className="text-sm font-medium hover:text-primary transition-colors"
           >
             Movies
-          </Link>
-          <Link
-            href="/new-and-popular"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            New & Popular
           </Link>
         </div>
 
@@ -136,18 +136,18 @@ export const Navbar = () => {
             TV Shows
           </Link>
           <Link
+            href="/seasons"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
+          >
+            Seasons
+          </Link>
+          <Link
             href="/movies"
             onClick={() => setIsMobileMenuOpen(false)}
             className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
           >
             Movies
-          </Link>
-          <Link
-            href="/new-and-popular"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
-          >
-            New & Popular
           </Link>
         </div>
       )}

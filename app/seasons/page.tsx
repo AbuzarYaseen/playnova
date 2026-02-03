@@ -5,9 +5,11 @@ import {
   useInfiniteTopRatedTV,
   useInfiniteOnTheAirTV,
   useInfiniteDiscoverTV,
+  useInfiniteTrendingTV,
   TVShow,
+  useTVDetails,
 } from "@/services/queries";
-import { MovieCard } from "@/components/MovieCard";
+import { SeasonCard } from "@/components/SeasonCard";
 import { LoadMore } from "@/components/LoadMore";
 import { useState } from "react";
 import {
@@ -20,16 +22,130 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
 
-export default function TVPage() {
+function ShowSeasons({
+  tvId,
+  showName,
+  activeLanguage = "en",
+}: {
+  tvId: number;
+  showName: string;
+  activeLanguage?: string;
+}) {
+  const { data: show, loading } = useTVDetails(String(tvId));
+
+  if (loading) return <div className="text-center py-6">Loading...</div>;
+  if (!show || !show.seasons || show.seasons.length === 0) return null;
+
+  // Language filtering: check original and spoken languages from details if available
+  const spoken: string[] =
+    (show as any).spoken_languages?.map((s: any) => s.iso_639_1) || [];
+  const originalLang: string = (show as any).original_language || "";
+
+  const matchesLanguage = (() => {
+    if (!activeLanguage || activeLanguage === "en") {
+      return originalLang === "en" || spoken.includes("en");
+    }
+    if (activeLanguage === "en_hi") {
+      // English show that also has Hindi spoken language (dubbed/subs)
+      return (
+        (originalLang === "en" || spoken.includes("en")) &&
+        spoken.includes("hi")
+      );
+    }
+    if (activeLanguage === "en_pa") {
+      // Punjabi might be 'pa' or 'pnb' in TMDB
+      return (
+        (originalLang === "en" || spoken.includes("en")) &&
+        (spoken.includes("pa") || spoken.includes("pnb"))
+      );
+    }
+    return true;
+  })();
+
+  if (!matchesLanguage) return null;
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-lg font-semibold">{showName}</h4>
+      <div className="relative">
+        <Carousel>
+          <CarouselContent className="gap-3">
+            {show.seasons.map((season) => (
+              <CarouselItem key={season.id} className="w-auto">
+                <SeasonCard tvId={tvId} showName={showName} season={season} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </div>
+    </div>
+  );
+}
+
+function Hero() {
+  const { data } = useInfiniteTrendingTV();
+  const items = data?.pages.flatMap((p: any) => p.results) || [];
+  const featured = items[0];
+
+  if (!featured) return null;
+
+  const backdrop = featured.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${featured.backdrop_path}`
+    : null;
+
+  return (
+    <div className="relative rounded-lg overflow-hidden mb-6">
+      {backdrop ? (
+        <img
+          src={backdrop}
+          alt={featured.name}
+          className="w-full h-105 object-cover brightness-75"
+        />
+      ) : (
+        <div className="w-full h-105 bg-secondary" />
+      )}
+
+      <div className="absolute inset-0 flex items-end p-8">
+        <div className="max-w-2xl">
+          <h2 className="text-4xl font-bold">{featured.name}</h2>
+          <p className="mt-4 text-muted-foreground line-clamp-3">
+            {featured.overview}
+          </p>
+          <div className="mt-6 flex gap-3">
+            <a
+              href={`/tv/${featured.id}`}
+              className="bg-white text-black px-4 py-2 rounded-md font-semibold"
+            >
+              View Show
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SeasonsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 pt-24 space-y-8">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold">TV Shows</h1>
+          <h1 className="text-4xl font-bold">Seasons</h1>
         </div>
 
-        <Tabs defaultValue="popular" className="space-y-8">
+        <Hero />
+
+        <Tabs defaultValue="discover" className="space-y-8">
           <TabsList className="bg-secondary/20 flex-wrap h-auto p-1">
             <TabsTrigger value="popular">Popular</TabsTrigger>
             <TabsTrigger value="top_rated">Top Rated</TabsTrigger>
@@ -38,16 +154,16 @@ export default function TVPage() {
           </TabsList>
 
           <TabsContent value="popular">
-            <TVGrid useQueryHook={useInfinitePopularTV} />
+            <SeasonsGrid useQueryHook={useInfinitePopularTV} />
           </TabsContent>
           <TabsContent value="top_rated">
-            <TVGrid useQueryHook={useInfiniteTopRatedTV} />
+            <SeasonsGrid useQueryHook={useInfiniteTopRatedTV} />
           </TabsContent>
           <TabsContent value="on_the_air">
-            <TVGrid useQueryHook={useInfiniteOnTheAirTV} />
+            <SeasonsGrid useQueryHook={useInfiniteOnTheAirTV} />
           </TabsContent>
           <TabsContent value="discover">
-            <DiscoverTVGrid />
+            <DiscoverSeasonsGrid />
           </TabsContent>
         </Tabs>
       </div>
@@ -55,7 +171,7 @@ export default function TVPage() {
   );
 }
 
-function TVGrid({ useQueryHook }: { useQueryHook: () => any }) {
+function SeasonsGrid({ useQueryHook }: { useQueryHook: () => any }) {
   const { data, loading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useQueryHook();
 
@@ -66,8 +182,12 @@ function TVGrid({ useQueryHook }: { useQueryHook: () => any }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {items.map((item: TVShow, index: number) => (
-          <MovieCard key={`${item.id}-${index}`} item={item} type="tv" />
+        {items.map((show: TVShow, idx: number) => (
+          <ShowSeasons
+            key={`${show.id}-${idx}`}
+            tvId={show.id}
+            showName={show.name}
+          />
         ))}
       </div>
       <LoadMore
@@ -80,7 +200,7 @@ function TVGrid({ useQueryHook }: { useQueryHook: () => any }) {
   );
 }
 
-function DiscoverTVGrid() {
+function DiscoverSeasonsGrid() {
   const [filters, setFilters] = useState({
     genre: "",
     year: "",
@@ -148,7 +268,7 @@ function DiscoverTVGrid() {
           value={filters.genre}
           onValueChange={(v) => setFilters({ ...filters, genre: v })}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-35">
             <SelectValue placeholder="Genre" />
           </SelectTrigger>
           <SelectContent>
@@ -161,7 +281,7 @@ function DiscoverTVGrid() {
         </Select>
         <Input
           placeholder="Year"
-          className="w-[100px]"
+          className="w-25"
           type="number"
           value={filters.year}
           onChange={(e) => setFilters({ ...filters, year: e.target.value })}
@@ -170,7 +290,7 @@ function DiscoverTVGrid() {
           value={filters.country}
           onValueChange={(v) => setFilters({ ...filters, country: v })}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-35">
             <SelectValue placeholder="Country" />
           </SelectTrigger>
           <SelectContent>
@@ -185,7 +305,7 @@ function DiscoverTVGrid() {
           value={filters.sortBy}
           onValueChange={(v) => setFilters({ ...filters, sortBy: v })}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-40">
             <SelectValue placeholder="Sort By" />
           </SelectTrigger>
           <SelectContent>
@@ -204,7 +324,11 @@ function DiscoverTVGrid() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {items.map((item: TVShow, index: number) => (
-          <MovieCard key={`${item.id}-${index}`} item={item} type="tv" />
+          <ShowSeasons
+            key={`${item.id}-${index}`}
+            tvId={item.id}
+            showName={item.name}
+          />
         ))}
       </div>
       {loading && <div className="text-center py-20">Loading...</div>}
