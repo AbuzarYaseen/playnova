@@ -33,7 +33,7 @@ import {
 function ShowSeasons({
   tvId,
   showName,
-  activeLanguage = "en",
+  activeLanguage,
 }: {
   tvId: number;
   showName: string;
@@ -44,13 +44,14 @@ function ShowSeasons({
   if (loading) return <div className="text-center py-6">Loading...</div>;
   if (!show || !show.seasons || show.seasons.length === 0) return null;
 
-  // Language filtering: check original and spoken languages from details if available
+  // Language filtering: only apply when `activeLanguage` is explicitly provided
   const spoken: string[] =
     (show as any).spoken_languages?.map((s: any) => s.iso_639_1) || [];
   const originalLang: string = (show as any).original_language || "";
 
   const matchesLanguage = (() => {
-    if (!activeLanguage || activeLanguage === "en") {
+    if (!activeLanguage) return true; // no language filter by default
+    if (activeLanguage === "en") {
       return originalLang === "en" || spoken.includes("en");
     }
     if (activeLanguage === "en_hi") {
@@ -75,62 +76,17 @@ function ShowSeasons({
   return (
     <div className="space-y-3">
       <h4 className="text-lg font-semibold">{showName}</h4>
-      <div className="relative">
-        <Carousel>
-          <CarouselContent className="gap-3">
-            {show.seasons.map((season) => (
-              <CarouselItem key={season.id} className="w-auto">
-                <SeasonCard tvId={tvId} showName={showName} season={season} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-      </div>
-    </div>
-  );
-}
-
-function Hero() {
-  const { data } = useInfiniteTrendingTV();
-  const items = data?.pages.flatMap((p: any) => p.results) || [];
-  const featured = items[0];
-
-  if (!featured) return null;
-
-  const backdrop = featured.backdrop_path
-    ? `https://image.tmdb.org/t/p/original${featured.backdrop_path}`
-    : null;
-
-  return (
-    <div className="relative rounded-lg overflow-hidden mb-6">
-      {backdrop ? (
-        <img
-          src={backdrop}
-          alt={featured.name}
-          className="w-full h-105 object-cover brightness-75"
-        />
-      ) : (
-        <div className="w-full h-105 bg-secondary" />
-      )}
-
-      <div className="absolute inset-0 flex items-end p-8">
-        <div className="max-w-2xl">
-          <h2 className="text-4xl font-bold">{featured.name}</h2>
-          <p className="mt-4 text-muted-foreground line-clamp-3">
-            {featured.overview}
-          </p>
-          <div className="mt-6 flex gap-3">
-            <a
-              href={`/tv/${featured.id}`}
-              className="bg-white text-black px-4 py-2 rounded-md font-semibold"
-            >
-              View Show
-            </a>
-          </div>
-        </div>
-      </div>
+      <Carousel className="w-40 md:w-50 h-[240px] md:h-[300px] rounded-lg">
+        <CarouselContent className="gap-3">
+          {show.seasons.map((season) => (
+            <CarouselItem key={season.id} className="w-auto">
+              <SeasonCard tvId={tvId} showName={showName} season={season} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className=" hidden md:flex" />
+        <CarouselNext className=" hidden md:flex" />
+      </Carousel>
     </div>
   );
 }
@@ -142,8 +98,6 @@ export default function SeasonsPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">Seasons</h1>
         </div>
-
-        <Hero />
 
         <Tabs defaultValue="discover" className="space-y-8">
           <TabsList className="bg-secondary/20 flex-wrap h-auto p-1">
@@ -181,7 +135,7 @@ function SeasonsGrid({ useQueryHook }: { useQueryHook: () => any }) {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-4  gap-6 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {items.map((show: TVShow, idx: number) => (
           <ShowSeasons
             key={`${show.id}-${idx}`}
@@ -322,7 +276,7 @@ function DiscoverSeasonsGrid() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:gap-6 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {items.map((item: TVShow, index: number) => (
           <ShowSeasons
             key={`${item.id}-${index}`}

@@ -10,7 +10,8 @@ import { MovieCard } from "@/components/MovieCard";
 import { LoadMore } from "@/components/LoadMore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Movie } from "@/services/queries";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -22,12 +23,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function MoviesPage() {
+  // read provider param reactively to auto-open discover and filter
+  const searchParams = useSearchParams();
+  const providerParam = searchParams?.get("provider");
+
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveTab(providerParam ? "discover" : "popular");
+  }, [providerParam]);
+
+  if (activeTab === null) {
+    return (
+      <div className="min-h-screen bg-background text-foreground pb-20 pt-24 space-y-8">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-8">Movies</h1>
+          <div className="text-center py-12">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 pt-24 space-y-8">
       <div className="container mx-auto px-4">
         <h1 className="text-4xl font-bold mb-8">Movies</h1>
 
-        <Tabs defaultValue="popular" className="space-y-8">
+        <Tabs
+          value={activeTab as string}
+          onValueChange={(v) => setActiveTab(v)}
+          className="space-y-8"
+        >
           <TabsList className="bg-secondary/20 flex-wrap h-auto p-1">
             <TabsTrigger value="popular">Popular</TabsTrigger>
             <TabsTrigger value="top_rated">Top Rated</TabsTrigger>
@@ -41,7 +67,7 @@ export default function MoviesPage() {
             <MovieGrid useQueryHook={useInfiniteTopRatedMovies} />
           </TabsContent>
           <TabsContent value="discover">
-            <DiscoverMoviesGrid />
+            <DiscoverMoviesGrid initialProvider={providerParam || undefined} />
           </TabsContent>
         </Tabs>
       </div>
@@ -75,17 +101,62 @@ function MovieGrid({ useQueryHook }: { useQueryHook: () => any }) {
   );
 }
 
-function DiscoverMoviesGrid() {
+function DiscoverMoviesGrid({ initialProvider }: { initialProvider?: string }) {
   const [filters, setFilters] = useState({
     genre: "",
     year: "",
     country: "",
     language: "",
     sortBy: "primary_release_date.desc",
+    provider: initialProvider || "",
   });
+
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
-    {},
+    initialProvider
+      ? { with_watch_providers: initialProvider, watch_region: "US" }
+      : {},
   );
+
+  const [providers, setProviders] = useState<Array<any>>([]);
+  const [providersLoading, setProvidersLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      setProvidersLoading(true);
+      try {
+        const res = await fetch(
+          `/api/tmdb/watch/providers/movie?language=en-US&watch_region=US`,
+        );
+        if (!res.ok) {
+          setProviders([]);
+          return;
+        }
+        const json = await res.json();
+        setProviders(
+          (json.results || []).sort((a: any, b: any) =>
+            a.provider_name.localeCompare(b.provider_name),
+          ),
+        );
+      } catch (e) {
+        setProviders([]);
+      } finally {
+        setProvidersLoading(false);
+      }
+    };
+
+    fetchProviders();
+  }, []);
+
+  // If a provider is present in the URL, apply it as an active filter on mount
+  useEffect(() => {
+    if (initialProvider) {
+      setActiveFilters({
+        with_watch_providers: initialProvider,
+        watch_region: "US",
+      });
+      setFilters((f) => ({ ...f, provider: initialProvider }));
+    }
+  }, [initialProvider]);
 
   const { data, loading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteDiscoverMovies(activeFilters);
@@ -97,6 +168,10 @@ function DiscoverMoviesGrid() {
     if (filters.country) query.with_origin_country = filters.country;
     if (filters.language) query.with_original_language = filters.language;
     if (filters.sortBy) query.sort_by = filters.sortBy;
+    if (filters.provider) {
+      query.with_watch_providers = filters.provider;
+      query.watch_region = "US";
+    }
 
     setActiveFilters(query);
   };
@@ -108,6 +183,7 @@ function DiscoverMoviesGrid() {
       country: "",
       language: "",
       sortBy: "popularity.desc",
+      provider: "",
     });
     setActiveFilters({});
   };
@@ -157,78 +233,112 @@ function DiscoverMoviesGrid() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-2 bg-secondary/20 p-4 rounded-lg">
-        <Select
-          value={filters.genre}
-          onValueChange={(v) => setFilters({ ...filters, genre: v })}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Genre" />
-          </SelectTrigger>
-          <SelectContent>
-            {genres.map((g) => (
-              <SelectItem key={g.id} value={g.id}>
-                {g.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-end gap-2 bg-secondary/20 p-4 rounded-lg">
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">Genre</label>
+          <Select
+            value={filters.genre}
+            onValueChange={(v) => setFilters({ ...filters, genre: v })}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Genre" />
+            </SelectTrigger>
+            <SelectContent>
+              {genres.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Input
-          placeholder="Year"
-          className="w-[100px]"
-          type="number"
-          value={filters.year}
-          onChange={(e) => setFilters({ ...filters, year: e.target.value })}
-        />
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">Year</label>
+          <Input
+            placeholder="Year"
+            className="w-[100px]"
+            type="number"
+            value={filters.year}
+            onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+          />
+        </div>
 
-        <Select
-          value={filters.country}
-          onValueChange={(v) => setFilters({ ...filters, country: v })}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Country" />
-          </SelectTrigger>
-          <SelectContent>
-            {countries.map((c) => (
-              <SelectItem key={c.code} value={c.code}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">Country</label>
+          <Select
+            value={filters.country}
+            onValueChange={(v) => setFilters({ ...filters, country: v })}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Country" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          value={filters.language}
-          onValueChange={(v) =>
-            setFilters({ ...filters, language: v === "en-hi" ? "en" : v })
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Language" />
-          </SelectTrigger>
-          <SelectContent>
-            {languages.map((l) => (
-              <SelectItem key={l.code} value={l.code}>
-                {l.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">Provider</label>
+          <Select
+            value={filters.provider}
+            onValueChange={(v) => setFilters({ ...filters, provider: v })}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Provider" />
+            </SelectTrigger>
+            <SelectContent>
+              {providers.map((p: any) => (
+                <SelectItem key={p.provider_id} value={String(p.provider_id)}>
+                  {p.provider_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          value={filters.sortBy}
-          onValueChange={(v) => setFilters({ ...filters, sortBy: v })}
-        >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Sort By" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popularity.desc">Popularity</SelectItem>
-            <SelectItem value="vote_average.desc">Rating</SelectItem>
-            <SelectItem value="primary_release_date.desc">Newest</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">Language</label>
+          <Select
+            value={filters.language}
+            onValueChange={(v) =>
+              setFilters({ ...filters, language: v === "en-hi" ? "en" : v })
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Language" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((l) => (
+                <SelectItem key={l.code} value={l.code}>
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">Sort By</label>
+          <Select
+            value={filters.sortBy}
+            onValueChange={(v) => setFilters({ ...filters, sortBy: v })}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="popularity.desc">Popularity</SelectItem>
+              <SelectItem value="vote_average.desc">Rating</SelectItem>
+              <SelectItem value="primary_release_date.desc">Newest</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <Button onClick={handleApplyFilters}>Apply</Button>
         {Object.keys(activeFilters).length > 0 && (

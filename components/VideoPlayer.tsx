@@ -15,9 +15,10 @@ export const VideoPlayer = ({
 }: VideoPlayerProps) => {
   let url = "";
   if (type === "movie") {
-    url = `https://player.smashy.stream/movie/${tmdbId}`;
+    url = `https://vidflix.club/movie/${tmdbId}`;
   } else {
-    url = `https://player.smashy.stream/tv/${tmdbId}?s=${season || 1}&e=${episode || 1}`;
+    // VIDFLIX expects /tv/{showId}/{season}/{episode}
+    url = `https://vidflix.club/tv/${tmdbId}/${season || 1}/${episode || 1}`;
   }
 
   return (
@@ -28,8 +29,9 @@ export const VideoPlayer = ({
         height="100%"
         frameBorder="0"
         allowFullScreen
+        allow="encrypted-media"
         className="w-full h-full"
-        title="Video Player"
+        title="Video Player (VIDFLIX)"
       />
     </div>
   );

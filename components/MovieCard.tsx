@@ -38,26 +38,23 @@ export const MovieCard = ({ item, type }: MovieCardProps) => {
           )}
 
           {/* Hover Overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-            <div className="flex items-center gap-1 text-yellow-400 mb-1">
-              <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">
-                {item.vote_average.toFixed(1)}
-              </span>
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-4">
+            <h3 className="text-base font-bold leading-tight truncate group-hover:text-primary transition-colors mb-5">
+              {title}
+            </h3>
+            <div className="flex flex-col justify-center items-center gap-1">
+              <p className="text-white text-sm font-medium line-clamp-3 mb-2">
+                {item.overview}
+              </p>
+              <div className="flex items-center gap-1 w-fit bg-yellow-500 rounded-lg px-3 py-1 ">
+                <Star className="w-3 h-3 fill-current" />
+                <span className="text-xs font-bold">
+                  {item.vote_average.toFixed(1)}
+                </span>
+              </div>
+              <p className="text-sm text-white mt-3">({date})</p>
             </div>
-            <p className="text-white text-xs font-medium line-clamp-3 mb-2">
-              {item.overview}
-            </p>
           </div>
-        </div>
-
-        <div className="mt-2 space-y-1">
-          <h3 className="text-sm font-medium leading-tight truncate group-hover:text-primary transition-colors">
-            {title}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            {date ? new Date(date).getFullYear() : "Unknown"}
-          </p>
         </div>
       </motion.div>
     </Link>

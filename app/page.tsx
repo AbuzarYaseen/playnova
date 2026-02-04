@@ -2,6 +2,7 @@
 
 import { Hero } from "@/components/Hero";
 import { MovieRow } from "@/components/MovieRow";
+import { ProviderSlider } from "@/components/ProviderSlider";
 import {
   usePopularMovies,
   useTrendingMovies,
@@ -18,6 +19,7 @@ export default function Home() {
       <Hero />
 
       <div className="-mt-20 relative z-10 pl-4 md:pl-8 space-y-4">
+        <ProviderSlider />
         <MovieRow title="Popular Now" data={popularMovies?.results} />
         <MovieRow title="Trending This Week" data={trendingMovies?.results} />
         <MovieRow title="Coming Soon" data={upcomingMovies?.results} />

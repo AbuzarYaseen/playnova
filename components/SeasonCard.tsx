@@ -2,6 +2,7 @@
 
 import { Season } from "@/services/queries";
 import { motion } from "framer-motion";
+import { Play } from "lucide-react";
 import Link from "next/link";
 
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
@@ -41,15 +42,15 @@ export const SeasonCard = ({ tvId, showName, season }: SeasonCardProps) => {
 
           <div className="absolute inset-0 flex flex-col justify-end p-3">
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="bg-white/10 hover:bg-white/20 rounded-full p-3 text-white">
-                Play
+              <button className="bg-red-200 cursor-pointer rounded-full p-3 text-black">
+                <Play />
               </button>
             </div>
             <div className="bg-linear-to-t from-black/70 to-transparent p-3 w-full">
               <h4 className="text-sm font-medium text-white truncate">
                 {season.name}
               </h4>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-green-200">
                 {season.episode_count} episodes • {year}
               </p>
             </div>
