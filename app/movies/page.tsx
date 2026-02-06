@@ -10,7 +10,7 @@ import { MovieCard } from "@/components/MovieCard";
 import { LoadMore } from "@/components/LoadMore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Movie } from "@/services/queries";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Select,
@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function MoviesPage() {
+function MoviesPageContent() {
   // read provider param reactively to auto-open discover and filter
   const searchParams = useSearchParams();
   const providerParam = searchParams?.get("provider");
@@ -72,6 +72,14 @@ export default function MoviesPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function MoviesPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-20">Loading...</div>}>
+      <MoviesPageContent />
+    </Suspense>
   );
 }
 

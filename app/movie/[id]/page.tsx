@@ -14,9 +14,9 @@ export default function MoviePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { data: movie, isLoading } = useMovieDetails(id);
+  const { data: movie, loading } = useMovieDetails(id);
 
-  if (isLoading || !movie) {
+  if (loading || !movie) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         Loading...

@@ -14,9 +14,9 @@ export default function TVPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { data: show, isLoading } = useTVDetails(id);
+  const { data: show, loading } = useTVDetails(id);
 
-  if (isLoading || !show) {
+  if (loading || !show) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         Loading...

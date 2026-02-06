@@ -69,6 +69,7 @@ const getProxyUrl = (
   endpoint: string,
   params?: Record<string, string | number>,
 ) => {
+  if (typeof window === "undefined") return "";
   const url = new URL(`/api/tmdb${endpoint}`, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {

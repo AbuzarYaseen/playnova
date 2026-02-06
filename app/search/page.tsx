@@ -3,11 +3,12 @@
 import { useSearch, Movie, TVShow } from "@/services/queries";
 import { MovieCard } from "@/components/MovieCard";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
-  const { data, isLoading } = useSearch(query);
+  const { data, loading } = useSearch(query);
 
   return (
     <div className="min-h-screen bg-background text-foreground pt-24 container mx-auto px-4 pb-20">
@@ -15,7 +16,7 @@ export default function SearchPage() {
         Search Results for &quot;{query}&quot;
       </h1>
 
-      {isLoading ? (
+      {loading ? (
         <div>Loading...</div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10">
@@ -42,5 +43,13 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 pt-24">Loading...</div>}>
+      <SearchPageContent />
+    </Suspense>
   );
 }

@@ -36,7 +36,7 @@ export function useFetch<T>(url: string, options?: RequestInit) {
     fetchData();
   }, [fetchData]);
 
-  return { ...state, refetch: fetchData };
+  return { ...state, isLoading: state.loading, refetch: fetchData };
 }
 
 export function useInfiniteFetch<
@@ -111,7 +111,7 @@ export function useInfiniteFetch<
 
   const hasNextPage = data
     ? data.pages[data.pages.length - 1].page <
-      data.pages[data.pages.length - 1].total_pages
+    data.pages[data.pages.length - 1].total_pages
     : false;
 
   return {

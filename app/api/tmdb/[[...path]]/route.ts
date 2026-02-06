@@ -7,7 +7,7 @@ const API_KEY =
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> },
+  { params }: { params: Promise<{ path?: string[] }> },
 ) {
   const { path } = await params;
   const searchParams = request.nextUrl.searchParams;
