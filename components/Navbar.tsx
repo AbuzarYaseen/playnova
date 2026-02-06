@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Search, Menu, X, Rocket } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +30,20 @@ export const Navbar = () => {
       setIsMobileMenuOpen(false);
     }
   };
+
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    return pathname?.startsWith(path);
+  };
+
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "TV Shows", href: "/tv" },
+    { name: "Seasons", href: "/seasons" },
+    { name: "Movies", href: "/movies" },
+  ];
 
   return (
     <nav
@@ -51,30 +66,18 @@ export const Navbar = () => {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          <Link
-            href="/"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            href="/tv"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            TV Shows
-          </Link>
-          <Link
-            href="/seasons"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            Seasons
-          </Link>
-          <Link
-            href="/movies"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            Movies
-          </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                isActive(link.href) ? "text-blue-500 border-b-2 border-gray-500" : "text-foreground/80",
+              )}
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
 
         {/* Search & Mobile Toggle */}
@@ -121,34 +124,21 @@ export const Navbar = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
-          <Link
-            href="/"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
-          >
-            Home
-          </Link>
-          <Link
-            href="/tv"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
-          >
-            TV Shows
-          </Link>
-          <Link
-            href="/seasons"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
-          >
-            Seasons
-          </Link>
-          <Link
-            href="/movies"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="px-4 py-2 hover:bg-secondary rounded-md text-sm font-medium"
-          >
-            Movies
-          </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={cn(
+                "px-4 py-2 rounded-md text-sm font-medium hover:bg-secondary",
+                isActive(link.href)
+                  ? "text-primary bg-primary/10"
+                  : "text-foreground",
+              )}
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
       )}
     </nav>
