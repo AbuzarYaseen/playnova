@@ -5,6 +5,7 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { Badge } from "@/components/ui/badge";
 import { Star, Calendar, Clock } from "lucide-react";
 import { use } from "react";
+import { Loader } from "@/components/Loader";
 
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
 
@@ -17,11 +18,7 @@ export default function MoviePage({
   const { data: movie, loading } = useMovieDetails(id);
 
   if (loading || !movie) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        Loading...
-      </div>
-    );
+    return <Loader fullScreen />;
   }
 
   return (

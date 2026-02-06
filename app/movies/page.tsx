@@ -11,6 +11,7 @@ import { LoadMore } from "@/components/LoadMore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Movie } from "@/services/queries";
 import { useState, useEffect, Suspense } from "react";
+import { Loader } from "@/components/Loader";
 import { useSearchParams } from "next/navigation";
 import {
   Select,
@@ -38,7 +39,7 @@ function MoviesPageContent() {
       <div className="min-h-screen bg-background text-foreground pb-20 pt-24 space-y-8">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold mb-8">Movies</h1>
-          <div className="text-center py-12">Loading...</div>
+          <Loader fullScreen />
         </div>
       </div>
     );
@@ -77,7 +78,7 @@ function MoviesPageContent() {
 
 export default function MoviesPage() {
   return (
-    <Suspense fallback={<div className="text-center py-20">Loading...</div>}>
+    <Suspense fallback={<Loader fullScreen />}>
       <MoviesPageContent />
     </Suspense>
   );
@@ -89,7 +90,7 @@ function MovieGrid({ useQueryHook }: { useQueryHook: () => any }) {
 
   const allMovies = data?.pages.flatMap((page: any) => page.results) || [];
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
+  if (loading) return <Loader fullScreen />;
 
   return (
     <div className="space-y-8">

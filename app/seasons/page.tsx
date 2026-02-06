@@ -9,6 +9,7 @@ import {
   TVShow,
   useTVDetails,
 } from "@/services/queries";
+import { Loader } from "@/components/Loader";
 import { SeasonCard } from "@/components/SeasonCard";
 import { LoadMore } from "@/components/LoadMore";
 import { useState } from "react";
@@ -41,7 +42,7 @@ function ShowSeasons({
 }) {
   const { data: show, loading } = useTVDetails(String(tvId));
 
-  if (loading) return <div className="text-center py-6">Loading...</div>;
+  if (loading) return <div className="py-20 flex justify-center"><Loader /></div>;
   if (!show || !show.seasons || show.seasons.length === 0) return null;
 
   // Language filtering: only apply when `activeLanguage` is explicitly provided
@@ -131,7 +132,7 @@ function SeasonsGrid({ useQueryHook }: { useQueryHook: () => any }) {
 
   const items = data?.pages.flatMap((page: any) => page.results) || [];
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
+  if (loading) return <Loader fullScreen />;
 
   return (
     <div className="space-y-8">
@@ -285,7 +286,7 @@ function DiscoverSeasonsGrid() {
           />
         ))}
       </div>
-      {loading && <div className="text-center py-20">Loading...</div>}
+      {loading && <div className="flex justify-center py-20"><Loader /></div>}
       <LoadMore
         isLoading={loading}
         hasNextPage={hasNextPage}

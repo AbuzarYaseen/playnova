@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader } from "@/components/Loader";
 
 export default function TVPage() {
   return (
@@ -61,7 +62,7 @@ function TVGrid({ useQueryHook }: { useQueryHook: () => any }) {
 
   const items = data?.pages.flatMap((page: any) => page.results) || [];
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
+  if (loading) return  <Loader />;
 
   return (
     <div className="space-y-8">

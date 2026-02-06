@@ -4,6 +4,7 @@ import { useSearch, Movie, TVShow } from "@/services/queries";
 import { MovieCard } from "@/components/MovieCard";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Loader } from "@/components/Loader";
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
@@ -17,7 +18,7 @@ function SearchPageContent() {
       </h1>
 
       {loading ? (
-        <div>Loading...</div>
+        <Loader fullScreen />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10">
           {data?.results
@@ -48,7 +49,7 @@ function SearchPageContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto px-4 pt-24">Loading...</div>}>
+    <Suspense fallback={<Loader fullScreen />}>
       <SearchPageContent />
     </Suspense>
   );

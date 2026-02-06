@@ -7,6 +7,7 @@ import { use } from "react";
 import { useState } from "react";
 import { PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Loader } from "@/components/Loader";
 
 export default function SeasonPage({
   params,
@@ -14,16 +15,12 @@ export default function SeasonPage({
   params: Promise<{ id: string; seasonNumber: string }>;
 }) {
   const { id, seasonNumber } = use(params);
-  const { data: season, loading } = useSeasonDetails(id, seasonNumber);
+  const { data: season, isLoading } = useSeasonDetails(id, seasonNumber);
   const { data: show } = useTVDetails(id);
   const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
 
-  if (loading || !season || !show) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        Loading...
-      </div>
-    );
+  if (isLoading || !season || !show) {
+    return <Loader fullScreen />;
   }
 
   return (
